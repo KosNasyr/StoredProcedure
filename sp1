@@ -1,0 +1,39 @@
+CREATE FUNCTION transport() returns table (
+	ch_id integer,
+	ch_path ltree,
+	bm_id integer,
+	bm_manager varchar,
+	tr_id integer,
+	tr_tank_average real,
+	tr_cargo varchar,
+	tr_driver varchar,
+	tr_reg_plate varchar,
+	bs_id integer,
+	bs_tank_average real,
+	bs_capacity integer,
+	bs_driver varchar,
+	bs_reg_plate varchar,
+	pc_id integer,
+	pc_tank_average real,
+	pc_driver varchar,
+	pc_reg_plate varchar,
+	pl text	
+) AS $$
+BEGIN
+RETURN QUERY SELECT ch.id,ch.path,coalesce(bm.id,0),coalesce(bm.manager,''),
+			coalesce(tr.id,0),coalesce(tr.tank_average,0.0),coalesce(tr.cargo,''),coalesce(tr.driver,''),coalesce(tr.registration_plate,''),
+			coalesce(bs.id,0),coalesce(bs.tank_average,0.0),coalesce(bs.capacity,0),coalesce(bs.driver,''),coalesce(bs.registration_plate,''),
+			coalesce(pc.id,0),coalesce(pc.tank_average,0.0),coalesce(pc.driver,''),coalesce(pc.registration_plate,''),
+substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 1 for 2) as path_label FROM company_hierarcy AS ch
+LEFT JOIN branch_management as bm
+ON substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 1 for 2) = 'bm' AND substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 3 for 3)::Integer = bm.id
+LEFT JOIN truck as tr
+ON substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 1 for 2) = 'tr' AND substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 3 for 3)::Integer = tr.id
+LEFT JOIN bus as bs
+ON substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 1 for 2) = 'bs' AND substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 3 for 3)::Integer = bs.id
+LEFT JOIN passenger_car as pc
+ON substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 1 for 2) = 'pc' AND substring(ltree2text(subltree(path, nlevel(path)-1, nlevel(path))) from 3 for 3)::Integer = pc.id
+order by ch.id;
+END
+$$ 
+LANGUAGE plpgsql;
