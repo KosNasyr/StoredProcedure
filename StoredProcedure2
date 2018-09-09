@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION add_management(manager1 VARCHAR(64), address1 VARCHAR
 	  b varchar;
     BEGIN
       INSERT INTO tmanagement(manager, address) VALUES (manager1, address1);
-      SELECT cast(MAX(id) as varchar) INTO b FROM tmanagement;
+      SELECT cast(id as varchar) INTO b FROM tmanagement where manager = manager1;
       INSERT INTO tcompany(path) VALUES(text2ltree('bm1.bm' || b)); 
     END;
     $$ LANGUAGE plpgsql;
